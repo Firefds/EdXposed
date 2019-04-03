@@ -8,6 +8,8 @@ public interface HookProvider {
 
     void hookMethod(Member method, XposedBridge.AdditionalHookInfo additionalInfo);
 
+    void unhookMethod(Member method);
+
     Object invokeOriginalMethod(Member method, long methodId, Object thisObject, Object[] args) throws Throwable;
 
     Member findMethodNative(Member hookMethod);
@@ -15,4 +17,8 @@ public interface HookProvider {
     void deoptMethods(String packageName, ClassLoader classLoader);
 
     long getMethodId(Member member);
+
+    Object findMethodNative(Class clazz, String methodName, String methodSig);
+
+    void deoptMethodNative(Object method);
 }

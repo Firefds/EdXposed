@@ -54,6 +54,11 @@ public class EdXpConfigGlobal {
         }
 
         @Override
+        public void unhookMethod(Member method) {
+
+        }
+
+        @Override
         public Object invokeOriginalMethod(Member method, long methodId, Object thisObject, Object[] args)
                 throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
             return null;
@@ -72,6 +77,16 @@ public class EdXpConfigGlobal {
         @Override
         public long getMethodId(Member member) {
             return 0;
+        }
+
+        @Override
+        public Object findMethodNative(Class clazz, String methodName, String methodSig) {
+            return null;
+        }
+
+        @Override
+        public void deoptMethodNative(Object method) {
+
         }
     };
 }
