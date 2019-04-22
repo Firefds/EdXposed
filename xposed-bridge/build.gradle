@@ -5,7 +5,6 @@ android {
     buildToolsVersion '28.0.3'
 
     defaultConfig {
-        multiDexEnabled false
         minSdkVersion 23
     }
 
@@ -40,14 +39,14 @@ preBuild.doLast {
 }
 
 dependencies {
-    compileOnly files("libs/framework-stub.jar")
+    compileOnly project(':hiddenapi-stubs')
     compileOnly project(':dexmaker')
 }
 
 afterEvaluate {
 
     tasks.withType(JavaCompile) {
-        options.compilerArgs.add("-Xbootclasspath/p:${projectDir.absolutePath}/libs/framework-stub.jar")
+        options.compilerArgs.add("-Xbootclasspath/p:${hiddenApiStubJarFilePath}")
     }
 
 }
