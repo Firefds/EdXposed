@@ -1,5 +1,9 @@
 package com.elderdrivers.riru.edxp.yahfa.config;
 
+import android.content.res.Resources;
+import android.content.res.XResources;
+
+import com.elderdrivers.riru.edxp.Main;
 import com.elderdrivers.riru.edxp.config.BaseHookProvider;
 import com.elderdrivers.riru.edxp.yahfa.dexmaker.DexMakerUtils;
 import com.elderdrivers.riru.edxp.yahfa.dexmaker.DynamicBridge;
@@ -23,5 +27,25 @@ public class YahfaHookProvider extends BaseHookProvider {
     @Override
     public Member findMethodNative(Member hookMethod) {
         return DexMakerUtils.findMethodNative(hookMethod);
+    }
+
+    @Override
+    public Object findMethodNative(Class clazz, String methodName, String methodSig) {
+        return Main.findMethodNative(clazz, methodName, methodSig);
+    }
+
+    @Override
+    public void deoptMethodNative(Object method) {
+        Main.deoptMethodNative(method);
+    }
+
+    @Override
+    public boolean initXResourcesNative() {
+        return Main.initXResourcesNative();
+    }
+
+    @Override
+    public void rewriteXmlReferencesNative(long parserPtr, XResources origRes, Resources repRes) {
+        Main.rewriteXmlReferencesNative(parserPtr, origRes, repRes);
     }
 }

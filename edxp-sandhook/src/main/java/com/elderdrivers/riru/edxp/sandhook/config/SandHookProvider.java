@@ -1,9 +1,11 @@
 package com.elderdrivers.riru.edxp.sandhook.config;
 
+import android.content.res.Resources;
+import android.content.res.XResources;
 import android.util.Log;
 
+import com.elderdrivers.riru.edxp.Main;
 import com.elderdrivers.riru.edxp.config.BaseHookProvider;
-import com.elderdrivers.riru.edxp.deopt.PrebuiltMethodsDeopter;
 import com.elderdrivers.riru.edxp.sandhook.dexmaker.DynamicBridge;
 import com.swift.sandhook.xposedcompat.XposedCompat;
 import com.swift.sandhook.xposedcompat.methodgen.SandHookXposedBridge;
@@ -45,12 +47,27 @@ public class SandHookProvider extends BaseHookProvider {
     }
 
     @Override
-    public void deoptMethods(String packageName, ClassLoader classLoader) {
-        PrebuiltMethodsDeopter.deoptMethods(packageName, classLoader);
+    public Object findMethodNative(Class clazz, String methodName, String methodSig) {
+        return Main.findMethodNative(clazz, methodName, methodSig);
+    }
+
+    @Override
+    public void deoptMethodNative(Object method) {
+        Main.deoptMethodNative(method);
     }
 
     @Override
     public long getMethodId(Member member) {
         return 0;
+    }
+
+    @Override
+    public boolean initXResourcesNative() {
+        return Main.initXResourcesNative();
+    }
+
+    @Override
+    public void rewriteXmlReferencesNative(long parserPtr, XResources origRes, Resources repRes) {
+        Main.rewriteXmlReferencesNative(parserPtr, origRes, repRes);
     }
 }
