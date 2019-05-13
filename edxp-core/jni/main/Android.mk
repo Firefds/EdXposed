@@ -8,7 +8,7 @@ LOCAL_C_INCLUDES := \
 LOCAL_CPPFLAGS += $(CPPFLAGS)
 LOCAL_STATIC_LIBRARIES := xhook
 LOCAL_LDLIBS += -ldl -llog
-LOCAL_LDFLAGS := -Wl
+LOCAL_LDFLAGS := -Wl,--hash-style=both
 
 LOCAL_SRC_FILES:= \
   main.cpp \
@@ -21,6 +21,10 @@ LOCAL_SRC_FILES:= \
   yahfa/trampoline.c \
   java_hook/java_hook.cpp \
   inject/framework_hook.cpp \
-  inject/config_manager.cpp
+  inject/config_manager.cpp \
+  Substrate/SubstrateDebug.cpp \
+  Substrate/SubstrateHook.cpp \
+  Substrate/SubstratePosixMemory.cpp \
+  Substrate/hde64.c \
 
 include $(BUILD_SHARED_LIBRARY)

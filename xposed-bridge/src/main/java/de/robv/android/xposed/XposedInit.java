@@ -3,7 +3,6 @@ package de.robv.android.xposed;
 import android.app.ActivityThread;
 import android.app.AndroidAppHelper;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageParser;
 import android.content.res.Resources;
 import android.content.res.ResourcesImpl;
 import android.content.res.TypedArray;
@@ -57,8 +56,7 @@ public final class XposedInit {
     private static final String startClassName = ""; // ed: no support for tool process anymore
 
     private static final String INSTANT_RUN_CLASS = "com.android.tools.fd.runtime.BootstrapApplication";
-    // TODO not supported yet
-    private static boolean disableResources = false;
+    public static boolean disableResources = false;
     private static final String[] XRESOURCES_CONFLICTING_PACKAGES = {"com.sygic.aura"};
 
     private XposedInit() {
@@ -82,20 +80,15 @@ public final class XposedInit {
             } catch (NoSuchFieldError ignored) {
             }
         }
-        findAndHookMethod("android.app.ApplicationPackageManager", null, "getResourcesForApplication",
-                ApplicationInfo.class, new XC_MethodHook() {
-                    @Override
-                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                        ApplicationInfo app = (ApplicationInfo) param.args[0];
-                        XResources.setPackageNameForResDir(app.packageName,
-                                app.uid == Process.myUid() ? app.sourceDir : app.publicSourceDir);
-                    }
-                });
+
         hookResources();
     }
 
-    /*package*/
-    public static void hookResources() throws Throwable {
+    private static void hookResources() throws Throwable {
+
+        if (disableResources) {
+            return;
+        }
 
         String BASE_DIR = EdXpConfigGlobal.getConfig().getInstallerBaseDir();
 
@@ -110,6 +103,16 @@ public final class XposedInit {
             disableResources = true;
             return;
         }
+
+        findAndHookMethod("android.app.ApplicationPackageManager", null, "getResourcesForApplication",
+                ApplicationInfo.class, new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                        ApplicationInfo app = (ApplicationInfo) param.args[0];
+                        XResources.setPackageNameForResDir(app.packageName,
+                                app.uid == Process.myUid() ? app.sourceDir : app.publicSourceDir);
+                    }
+                });
 
         /*
          * getTopLevelResources(a)
@@ -262,14 +265,6 @@ public final class XposedInit {
         setStaticObjectField(Resources.class, "mSystem", systemRes);
 
         XResources.init(latestResKey);
-
-        //custom
-        hookAllConstructors(PackageParser.PackageParserException.class, new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                XposedBridge.log(new Throwable());
-            }
-        });
     }
 
     private static XResources cloneToXResources(XC_MethodHook.MethodHookParam param, String resDir) {
