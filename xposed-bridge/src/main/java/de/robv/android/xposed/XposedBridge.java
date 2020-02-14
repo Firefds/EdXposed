@@ -147,7 +147,7 @@ public final class XposedBridge {
 	}
 
 	/**
-	 * Writes a message to the Xposed error log.
+	 * Writes a message to the Xposed modules log.
 	 *
 	 * <p class="warning"><b>DON'T FLOOD THE LOG!!!</b> This is only meant for error logging.
 	 * If you want to write information/debug messages, use logcat.
@@ -155,11 +155,14 @@ public final class XposedBridge {
 	 * @param text The log message.
 	 */
 	public synchronized static void log(String text) {
+		if (EdXpConfigGlobal.getConfig().isNoModuleLogEnabled()) {
+			return;
+		}
 		Log.i(TAG, text);
 	}
 
 	/**
-	 * Logs a stack trace to the Xposed error log.
+	 * Logs a stack trace to the Xposed modules log.
 	 *
 	 * <p class="warning"><b>DON'T FLOOD THE LOG!!!</b> This is only meant for error logging.
 	 * If you want to write information/debug messages, use logcat.
@@ -168,6 +171,19 @@ public final class XposedBridge {
 	 */
 	public synchronized static void log(Throwable t) {
 		Log.e(TAG, Log.getStackTraceString(t));
+	}
+
+	/**
+	 * Logs a stack trace to the Xposed modules log with module's name.
+	 *
+	 * <p class="warning"><b>DON'T FLOOD THE LOG!!!</b> This is only meant for error logging.
+	 * If you want to write information/debug messages, use logcat.
+	 *
+	 * @param name The module's name..
+	 * @param t The Throwable object for the stack trace.
+	 */
+	public synchronized static void log(String name, Throwable t) {
+		Log.e(TAG, name + ": " + Log.getStackTraceString(t));
 	}
 
 	/**
