@@ -1,8 +1,11 @@
 package com.swift.sandhook.xposedcompat.methodgen;
 
+import android.os.Build;
 import android.os.Process;
 import android.os.Trace;
+import android.util.Log;
 
+import com.elderdrivers.riru.edxp.util.ClassLoaderUtils;
 import com.swift.sandhook.SandHook;
 import com.swift.sandhook.SandHookConfig;
 import com.swift.sandhook.blacklist.HookBlackList;
@@ -31,7 +34,12 @@ public final class SandHookXposedBridge {
     private static final AtomicBoolean dexPathInited = new AtomicBoolean(false);
     private static File dexDir;
 
-    public static Map<Member,HookMethodEntity> entityMap = new ConcurrentHashMap<>();
+    public static Map<Member, HookMethodEntity> entityMap = new ConcurrentHashMap<>();
+
+    public static void onForkPost() {
+        dexPathInited.set(false);
+        XposedCompat.onForkProcess();
+    }
 
     public static boolean hooked(Member member) {
         return hookedInfo.containsKey(member) || entityMap.containsKey(member);
@@ -56,7 +64,7 @@ public final class SandHookXposedBridge {
                     if (!dexDir.exists())
                         dexDir.mkdirs();
                 } catch (Throwable throwable) {
-                    DexLog.e("error when init dex path", throwable);
+                    Log.e("SandHook", "error when init dex path", throwable);
                 }
             }
             Trace.beginSection("SandXposed");
@@ -76,7 +84,9 @@ public final class SandHookXposedBridge {
                     hookMaker = defaultHookMaker;
                 }
                 hookMaker.start(hookMethod, additionalHookInfo,
-                        hookMethod.getDeclaringClass().getClassLoader(), dexDir == null ? null : dexDir.getAbsolutePath());
+                        ClassLoaderUtils.createProxyClassLoader(
+                                hookMethod.getDeclaringClass().getClassLoader()),
+                        dexDir == null ? null : dexDir.getAbsolutePath());
                 hookedInfo.put(hookMethod, hookMaker.getCallBackupMethod());
             }
             DexLog.d("hook method <" + hookMethod.toString() + "> cost " + (System.currentTimeMillis() - timeStart) + " ms, by " + (stub != null ? "internal stub" : "dex maker"));
@@ -134,6 +144,17 @@ public final class SandHookXposedBridge {
             }
         };
         SandHookConfig.DEBUG = true;
+        SandHookConfig.compiler = false;
+        //already impl in edxp
+        SandHookConfig.delayHook = false;
+        //use when call origin
+        HookBlackList.methodBlackList.add("java.lang.reflect.isStatic");
+        HookBlackList.methodBlackList.add("java.lang.reflect.Method.getModifiers");
+        if (Build.VERSION.SDK_INT >= 29) {
+            //unknown bug, disable tmp
+            //TODO Fix
+            XposedCompat.useInternalStub = false;
+        }
         //in zygote disable compile
     }
 }

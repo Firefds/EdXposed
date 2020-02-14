@@ -4,11 +4,8 @@ import android.app.AndroidAppHelper;
 import android.os.Build;
 import android.text.TextUtils;
 
-import com.elderdrivers.riru.edxp.Main;
 import com.elderdrivers.riru.edxp.config.ConfigManager;
-import com.elderdrivers.riru.edxp.yahfa.core.HookMain;
 
-import java.lang.reflect.Member;
 import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,8 +24,8 @@ public class DexMakerUtils {
         }
         String packageName = AndroidAppHelper.currentPackageName();
         if (TextUtils.isEmpty(packageName)) { //default to true
-            DexLog.w("packageName is empty, processName=" + Main.appProcessName
-                    + ", appDataDir=" + Main.appDataDir);
+            DexLog.w("packageName is empty, processName=" + ConfigManager.appProcessName
+                    + ", appDataDir=" + ConfigManager.appDataDir);
             return true;
         }
         return !ConfigManager.shouldUseCompatMode(packageName);
@@ -244,18 +241,5 @@ public class DexMakerUtils {
             DexLog.e("error hashing target method: " + text, e);
         }
         return "";
-    }
-
-    public static Member findMethodNative(Member hookMethod) {
-        MethodInfo methodInfo = new MethodInfo(hookMethod);
-        Class declaringClass = methodInfo.getClassForSure();
-        Member reflectMethod = (Member) HookMain.findMethod(
-                declaringClass, methodInfo.methodName, methodInfo.methodSig);
-        if (reflectMethod == null) {
-            DexLog.e("method not found: name="
-                    + methodInfo.methodName + ", sig=" + methodInfo.methodSig);
-            reflectMethod = hookMethod;
-        }
-        return reflectMethod;
     }
 }

@@ -4,8 +4,9 @@ import android.annotation.TargetApi;
 import android.os.Build;
 import android.text.TextUtils;
 
-import com.elderdrivers.riru.edxp.Main;
-import com.elderdrivers.riru.edxp.yahfa.core.HookMain;
+import com.elderdrivers.riru.edxp.core.Yahfa;
+import com.elderdrivers.riru.edxp.core.yahfa.HookMain;
+import com.elderdrivers.riru.edxp.util.ProxyClassLoader;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
@@ -177,9 +178,10 @@ public class HookerDexMaker {
         mDexDirPath = dexDirPath;
         if (appClassLoader == null
                 || appClassLoader.getClass().getName().equals("java.lang.BootClassLoader")) {
-            mAppClassLoader = this.getClass().getClassLoader();
+            mAppClassLoader = getClass().getClassLoader();
         } else {
             mAppClassLoader = appClassLoader;
+            mAppClassLoader = new ProxyClassLoader(mAppClassLoader, getClass().getClassLoader());
         }
         doMake();
     }
@@ -219,7 +221,7 @@ public class HookerDexMaker {
         mHookMethod = mHookClass.getMethod(METHOD_NAME_HOOK, mActualParameterTypes);
         mBackupMethod = mHookClass.getMethod(METHOD_NAME_BACKUP, mActualParameterTypes);
         mCallBackupMethod = mHookClass.getMethod(METHOD_NAME_CALL_BACKUP, mActualParameterTypes);
-        Main.setMethodNonCompilable(mCallBackupMethod);
+        Yahfa.setMethodNonCompilable(mCallBackupMethod);
         HookMain.backupAndHook(mMember, mHookMethod, mBackupMethod);
     }
 

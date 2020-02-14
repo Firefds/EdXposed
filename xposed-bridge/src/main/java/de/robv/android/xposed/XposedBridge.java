@@ -22,7 +22,9 @@ import java.util.Set;
 import dalvik.system.InMemoryDexClassLoader;
 import de.robv.android.xposed.XC_MethodHook.MethodHookParam;
 import de.robv.android.xposed.callbacks.XC_InitPackageResources;
+import de.robv.android.xposed.callbacks.XC_InitZygote;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
+import de.robv.android.xposed.callbacks.XCallback;
 import external.com.android.dx.DexMaker;
 import external.com.android.dx.TypeId;
 
@@ -67,6 +69,7 @@ public final class XposedBridge {
 	public static final Map<Member, CopyOnWriteSortedSet<XC_MethodHook>> sHookedMethodCallbacks = new HashMap<>();
 	public static final CopyOnWriteSortedSet<XC_LoadPackage> sLoadedPackageCallbacks = new CopyOnWriteSortedSet<>();
 	/*package*/ static final CopyOnWriteSortedSet<XC_InitPackageResources> sInitPackageResourcesCallbacks = new CopyOnWriteSortedSet<>();
+	/*package*/ static final CopyOnWriteSortedSet<XC_InitZygote> sInitZygoteCallbacks = new CopyOnWriteSortedSet<>();
 
 	private XposedBridge() {}
 
@@ -90,15 +93,6 @@ public final class XposedBridge {
 	public static volatile ClassLoader dummyClassLoader = null;
 
 	public static void initXResources() {
-	    if (disableHooks) {
-	        return;
-        }
-		String BASE_DIR = EdXpConfigGlobal.getConfig().getInstallerBaseDir();
-		if (SELinuxHelper.getAppDataFileService().checkFileExists(BASE_DIR + "conf/disable_resources")) {
-			Log.w(TAG, "Found " + BASE_DIR + "conf/disable_resources, not hooking resources");
-			XposedInit.disableResources = true;
-			return;
-		}
         if (dummyClassLoader != null) {
         	return;
 		}
@@ -237,7 +231,11 @@ public final class XposedBridge {
 
             AdditionalHookInfo additionalInfo = new AdditionalHookInfo(callbacks, parameterTypes, returnType);
             Member reflectMethod = EdXpConfigGlobal.getHookProvider().findMethodNative(hookMethod);
-            hookMethodNative(reflectMethod, declaringClass, slot, additionalInfo);
+            if (reflectMethod != null) {
+				hookMethodNative(reflectMethod, declaringClass, slot, additionalInfo);
+			} else {
+				PendingHooks.recordPendingMethod(hookMethod, additionalInfo);
+			}
         }
 
         return callback.new Unhook(hookMethod);
@@ -429,11 +427,33 @@ public final class XposedBridge {
 		}
 	}
 
+	public static void hookInitZygote(XC_InitZygote callback) {
+		synchronized (sInitZygoteCallbacks) {
+			sInitZygoteCallbacks.add(callback);
+		}
+	}
+
+	public static void clearInitZygotes() {
+		synchronized (sInitZygoteCallbacks) {
+			sInitZygoteCallbacks.clear();
+		}
+	}
+
+	public static void callInitZygotes() {
+		XCallback.callAll(new IXposedHookZygoteInit.StartupParam(sInitZygoteCallbacks));
+	}
+
+	public static void clearAllCallbacks() {
+		clearLoadedPackages();
+		clearInitPackageResources();
+		clearInitZygotes();
+	}
+
 	/**
 	 * Intercept every call to the specified method and call a handler function instead.
 	 * @param method The method to intercept
 	 */
-	private synchronized static void hookMethodNative(final Member method, Class<?> declaringClass,
+	/*package*/ synchronized static void hookMethodNative(final Member method, Class<?> declaringClass,
                                                       int slot, final Object additionalInfoObj) {
 		EdXpConfigGlobal.getHookProvider().hookMethod(method, (AdditionalHookInfo) additionalInfoObj);
 	}

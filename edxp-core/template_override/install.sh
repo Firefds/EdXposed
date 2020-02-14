@@ -123,7 +123,7 @@ REPLACE="
 
  print_modname() {
   ui_print "*******************************"
-  ui_print "*      Riru - Ed Xposed       *"
+  ui_print "*       Riru - EdXposed       *"
   ui_print "*******************************"
 }
 
@@ -168,6 +168,8 @@ REPLACE="
 
   [[ -d "$TARGET" ]] || mkdir -p "$TARGET" || abort "! Can't mkdir -p $TARGET"
   cp -af "$TMPDIR$TARGET/." "$TARGET" || abort "! Can't cp -af $TMPDIR$TARGET/. $TARGET"
+  
+  cp -af "$TMPDIR/util_functions.sh" "$MODPATH/util_functions.sh" || abort "! Can't cp -af $TMPDIR/util_functions.sh $MODPATH/util_functions.sh"
 
    ui_print "- Files copied"
 }

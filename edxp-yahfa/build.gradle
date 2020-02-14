@@ -1,5 +1,8 @@
 apply plugin: 'com.android.application'
 
+sourceCompatibility = "7"
+targetCompatibility = "7"
+
 android {
     compileSdkVersion 28
 
@@ -9,6 +12,7 @@ android {
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
     }
 
     buildTypes {
@@ -45,7 +49,7 @@ preBuild.doLast {
 afterEvaluate {
 
     tasks.withType(JavaCompile) {
-        options.compilerArgs.add("-Xbootclasspath/p:${hiddenApiStubJarFilePath}")
+        options.compilerArgs << "-Xbootclasspath/p:${hiddenApiStubJarFilePath}"
     }
 
     android.applicationVariants.all { variant ->
@@ -57,7 +61,8 @@ afterEvaluate {
 
         task("makeAndCopy${variantNameCapped}", type: Jar, dependsOn: "assemble${variantNameCapped}") {
             dependsOn tasks.getByPath(":edxp-common:copyCommonProperties")
-            from "${buildDir}/intermediates/transforms/dexMerger/${variantNameLowered}/0/"
+            from "${buildDir}/intermediates/transforms/dexMerger/${variantNameLowered}/0/",
+                    "${projectDir}/src/main/resources/"
             destinationDir file(myTemplatePath + "system/framework/")
             baseName "edxp"
             doLast {
